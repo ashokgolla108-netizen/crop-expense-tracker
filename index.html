@@ -104,11 +104,11 @@
           <span id="grandTotal" class="text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-md">Filtered Total: ₹0</span>
         </div>
 
-        <!-- Filters -->
+        <!-- Dynamic Filters -->
         <div class="grid grid-cols-2 gap-2">
           <div>
             <label class="block text-[10px] uppercase font-bold text-slate-400 mb-1">Filter by Person</label>
-            <select id="filterPerson" onchange="renderList()" class="w-full border border-slate-300 text-xs rounded-lg p-2 focus:outline-none">
+            <select id="filterPerson" onchange="onPersonFilterChange()" class="w-full border border-slate-300 text-xs rounded-lg p-2 focus:outline-none">
               <option value="ALL">All Persons</option>
             </select>
           </div>
@@ -198,30 +198,57 @@
 
     function saveAndRender() {
       localStorage.setItem('crop_expenses_v2', JSON.stringify(expenses));
-      populateFilterDropdowns();
+      populatePersonDropdown();
+      populateCropDropdown();
       renderSummary();
       renderList();
     }
 
-    function populateFilterDropdowns() {
+    // Populate Person Filter Dropdown
+    function populatePersonDropdown() {
       const personFilter = document.getElementById('filterPerson');
-      const cropFilter = document.getElementById('filterCrop');
-
       const currentPersonVal = personFilter.value;
-      const currentCropVal = cropFilter.value;
 
-      const persons = ['Home', 'Ashok', 'Dhanu', ...new Set(expenses.map(e => e.spentBy))];
-      const uniquePersons = [...new Set(persons)];
-      const uniqueCrops = [...new Set(expenses.map(e => e.cropName))];
+      const defaultPersons = ['Home', 'Ashok', 'Dhanu'];
+      const recordedPersons = expenses.map(e => e.spentBy);
+      const uniquePersons = [...new Set([...defaultPersons, ...recordedPersons])];
 
       personFilter.innerHTML = '<option value="ALL">All Persons</option>' + 
         uniquePersons.map(p => `<option value="${p}">${p}</option>`).join('');
 
+      personFilter.value = uniquePersons.includes(currentPersonVal) ? currentPersonVal : 'ALL';
+    }
+
+    // Populate Crop Dropdown based on Selected Person
+    function populateCropDropdown() {
+      const personFilter = document.getElementById('filterPerson').value;
+      const cropFilter = document.getElementById('filterCrop');
+      const currentCropVal = cropFilter.value;
+
+      // Filter expenses by selected person first
+      let relevantExpenses = expenses;
+      if (personFilter !== 'ALL') {
+        relevantExpenses = expenses.filter(e => e.spentBy.toLowerCase() === personFilter.toLowerCase());
+      }
+
+      // Get unique crops only from relevant expenses
+      const uniqueCrops = [...new Set(relevantExpenses.map(e => e.cropName))];
+
       cropFilter.innerHTML = '<option value="ALL">All Crops</option>' + 
         uniqueCrops.map(c => `<option value="${c}">${c}</option>`).join('');
 
-      personFilter.value = uniquePersons.includes(currentPersonVal) ? currentPersonVal : 'ALL';
-      cropFilter.value = uniqueCrops.includes(currentCropVal) ? currentCropVal : 'ALL';
+      // Keep current crop selection if it exists in the updated list, otherwise default to ALL
+      if (uniqueCrops.some(c => c.toLowerCase() === currentCropVal.toLowerCase())) {
+        cropFilter.value = currentCropVal;
+      } else {
+        cropFilter.value = 'ALL';
+      }
+    }
+
+    // Triggered when Person filter changes
+    function onPersonFilterChange() {
+      populateCropDropdown();
+      renderList();
     }
 
     function renderSummary() {
@@ -250,7 +277,7 @@
       const cropFilter = document.getElementById('filterCrop').value;
 
       const filtered = expenses.filter(e => {
-        const matchesPerson = personFilter === 'ALL' || e.spentBy === personFilter;
+        const matchesPerson = personFilter === 'ALL' || e.spentBy.toLowerCase() === personFilter.toLowerCase();
         const matchesCrop = cropFilter === 'ALL' || e.cropName.toLowerCase() === cropFilter.toLowerCase();
         return matchesPerson && matchesCrop;
       });
