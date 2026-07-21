@@ -45,11 +45,14 @@
           <input type="text" id="customPersonInput" placeholder="Enter person name" class="hidden w-full mt-2 border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
         </div>
 
-        <!-- Crop Name & Expense Type -->
+        <!-- Crop Name Select & Expense Type -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Crop Name</label>
-            <input type="text" id="cropName" placeholder="e.g. Paddy, Tomato, Cotton" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none" required>
+            <select id="cropSelect" onchange="toggleCustomInputs()" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none" required>
+              <!-- Available crops populate dynamically -->
+            </select>
+            <input type="text" id="customCropInput" placeholder="Enter new crop name" class="hidden w-full mt-2 border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
           </div>
 
           <div>
@@ -131,10 +134,14 @@
   <script>
     let expenses = JSON.parse(localStorage.getItem('crop_expenses_v2')) || [];
 
+    // Default crop options
+    const defaultCrops = ['Paddy', 'Tomato', 'Cotton', 'Chilli'];
+
     // Set default date
     document.getElementById('expenseDate').valueAsDate = new Date();
 
     function toggleCustomInputs() {
+      // Custom Person Input
       const spentBySelect = document.getElementById('spentBySelect');
       const customPersonInput = document.getElementById('customPersonInput');
       if (spentBySelect.value === 'CUSTOM') {
@@ -145,6 +152,18 @@
         customPersonInput.required = false;
       }
 
+      // Custom Crop Input
+      const cropSelect = document.getElementById('cropSelect');
+      const customCropInput = document.getElementById('customCropInput');
+      if (cropSelect.value === 'CUSTOM') {
+        customCropInput.classList.remove('hidden');
+        customCropInput.required = true;
+      } else {
+        customCropInput.classList.add('hidden');
+        customCropInput.required = false;
+      }
+
+      // Custom Expense Category Input
       const categorySelect = document.getElementById('categorySelect');
       const customCategoryInput = document.getElementById('customCategoryInput');
       if (categorySelect.value === 'CUSTOM') {
@@ -153,6 +172,22 @@
       } else {
         customCategoryInput.classList.add('hidden');
         customCategoryInput.required = false;
+      }
+    }
+
+    // Populate Crop Form Selection Dropdown
+    function populateFormCropDropdown() {
+      const cropSelect = document.getElementById('cropSelect');
+      const currentSelected = cropSelect.value;
+
+      const recordedCrops = expenses.map(e => e.cropName);
+      const uniqueCrops = [...new Set([...defaultCrops, ...recordedCrops])];
+
+      cropSelect.innerHTML = uniqueCrops.map(c => `<option value="${c}">${c}</option>`).join('') + 
+        '<option value="CUSTOM">+ Enter New Crop</option>';
+
+      if (uniqueCrops.includes(currentSelected)) {
+        cropSelect.value = currentSelected;
       }
     }
 
@@ -165,6 +200,11 @@
         ? document.getElementById('customPersonInput').value.trim() 
         : spentBySelect;
 
+      const cropSelect = document.getElementById('cropSelect').value;
+      const finalCrop = cropSelect === 'CUSTOM' 
+        ? document.getElementById('customCropInput').value.trim() 
+        : cropSelect;
+
       const categorySelect = document.getElementById('categorySelect').value;
       const finalCategory = categorySelect === 'CUSTOM' 
         ? document.getElementById('customCategoryInput').value.trim() 
@@ -173,7 +213,7 @@
       const record = {
         id: Date.now(),
         spentBy: finalSpentBy,
-        cropName: document.getElementById('cropName').value.trim(),
+        cropName: finalCrop,
         category: finalCategory,
         amount: parseFloat(document.getElementById('amount').value),
         date: document.getElementById('expenseDate').value,
@@ -198,6 +238,7 @@
 
     function saveAndRender() {
       localStorage.setItem('crop_expenses_v2', JSON.stringify(expenses));
+      populateFormCropDropdown();
       populatePersonDropdown();
       populateCropDropdown();
       renderSummary();
@@ -225,19 +266,16 @@
       const cropFilter = document.getElementById('filterCrop');
       const currentCropVal = cropFilter.value;
 
-      // Filter expenses by selected person first
       let relevantExpenses = expenses;
       if (personFilter !== 'ALL') {
         relevantExpenses = expenses.filter(e => e.spentBy.toLowerCase() === personFilter.toLowerCase());
       }
 
-      // Get unique crops only from relevant expenses
       const uniqueCrops = [...new Set(relevantExpenses.map(e => e.cropName))];
 
       cropFilter.innerHTML = '<option value="ALL">All Crops</option>' + 
         uniqueCrops.map(c => `<option value="${c}">${c}</option>`).join('');
 
-      // Keep current crop selection if it exists in the updated list, otherwise default to ALL
       if (uniqueCrops.some(c => c.toLowerCase() === currentCropVal.toLowerCase())) {
         cropFilter.value = currentCropVal;
       } else {
@@ -245,7 +283,6 @@
       }
     }
 
-    // Triggered when Person filter changes
     function onPersonFilterChange() {
       populateCropDropdown();
       renderList();
