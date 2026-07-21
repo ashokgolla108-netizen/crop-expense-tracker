@@ -16,8 +16,11 @@
         <p class="text-emerald-200 text-xs mt-0.5">Manage & track farm expenses easily</p>
       </div>
       <div class="flex gap-2">
-        <button onclick="shareToWhatsApp()" class="bg-green-600 hover:bg-green-700 text-xs text-white px-3 py-1.5 rounded-lg font-bold shadow-sm transition flex items-center gap-1">
-          💬 Share WhatsApp
+        <button onclick="exportCSV()" class="bg-emerald-800 hover:bg-emerald-900 text-xs text-white px-2.5 py-1.5 rounded-lg border border-emerald-600 font-medium transition flex items-center gap-1">
+          📥 Export CSV
+        </button>
+        <button onclick="shareToWhatsApp()" class="bg-green-600 hover:bg-green-700 text-xs text-white px-2.5 py-1.5 rounded-lg font-bold shadow-sm transition flex items-center gap-1">
+          💬 WhatsApp
         </button>
       </div>
     </div>
@@ -278,16 +281,33 @@
       `).join('');
     }
 
+    // Export Standalone CSV
+    function exportCSV() {
+      if (expenses.length === 0) return alert('No expenses to export!');
+      
+      let csv = 'Date,Spent By,Crop Name,Category,Amount,Notes\n';
+      expenses.forEach(e => {
+        csv += `"${e.date}","${e.spentBy}","${e.cropName}","${e.category}",${e.amount},"${e.notes}"\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.setAttribute('href', url);
+      a.setAttribute('download', `crop_expenses_${new Date().toISOString().slice(0,10)}.csv`);
+      a.click();
+    }
+
     // WhatsApp Share Feature
     function shareToWhatsApp() {
       if (expenses.length === 0) {
         return alert('No expenses to share!');
       }
 
-      // 1. Download CSV File automatically
+      // Download CSV File automatically
       exportCSV();
 
-      // 2. Build text summary message
+      // Build text summary message
       const personTotals = {};
       let totalAmount = 0;
 
@@ -308,27 +328,11 @@
       textMsg += `💰 *Grand Total:* ₹${totalAmount.toLocaleString('en-IN')}\n\n`;
       textMsg += `_(CSV report downloaded to device)_`;
 
-      // 3. Open WhatsApp directly to target number +91 7075226826
+      // Open WhatsApp directly to target number +91 7075226826
       const phoneNumber = "917075226826";
       const whatsappUrl = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodeURIComponent(textMsg)}`;
       
       window.open(whatsappUrl, '_blank');
-    }
-
-    function exportCSV() {
-      if (expenses.length === 0) return;
-      
-      let csv = 'Date,Spent By,Crop Name,Category,Amount,Notes\n';
-      expenses.forEach(e => {
-        csv += `"${e.date}","${e.spentBy}","${e.cropName}","${e.category}",${e.amount},"${e.notes}"\n`;
-      });
-
-      const blob = new Blob([csv], { type: 'text/csv' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.setAttribute('href', url);
-      a.setAttribute('download', `crop_expenses_${new Date().toISOString().slice(0,10)}.csv`);
-      a.click();
     }
 
     function escapeHtml(str) {
