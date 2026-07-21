@@ -1,1 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crop Expense Tracker</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 min-h-screen text-slate-800 pb-12 font-sans">
+
+  <!-- Header -->
+  <header class="bg-emerald-700 text-white py-5 shadow-lg">
+    <div class="max-w-xl mx-auto px-4 flex justify-between items-center">
+      <div>
+        <h1 class="text-xl font-bold tracking-wide">🌾 Crop Expense Tracker</h1>
+        <p class="text-emerald-200 text-xs mt-0.5">Manage & track farm expenses easily</p>
+      </div>
+      <button onclick="exportCSV()" class="bg-emerald-800 hover:bg-emerald-900 text-xs px-3 py-1.5 rounded-lg border border-emerald-600 font-medium transition">
+        📥 Export CSV
+      </button>
+    </div>
+  </header>
+
+  <main class="max-w-xl mx-auto px-4 mt-5 space-y-5">
+
+    <!-- Add Expense Form -->
+    <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+      <h2 class="text-base font-bold text-slate-700 mb-3 border-b pb-2">Add New Expense</h2>
+      
+      <form id="expenseForm" class="space-y-4">
+        
+        <!-- Spent By -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Spent By</label>
+          <select id="spentBySelect" onchange="toggleCustomInputs()" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none" required>
+            <option value="Home">Home</option>
+            <option value="Ashok">Ashok</option>
+            <option value="Dhanu">Dhanu</option>
+            <option value="CUSTOM">+ Enter Custom Name</option>
+          </select>
+          <input type="text" id="customPersonInput" placeholder="Enter person name" class="hidden w-full mt-2 border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+        </div>
+
+        <!-- Crop Name & Expense Type -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Crop Name</label>
+            <input type="text" id="cropName" placeholder="e.g. Paddy, Tomato, Cotton" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none" required>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Expense Type</label>
+            <select id="categorySelect" onchange="toggleCustomInputs()" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none" required>
+              <option value="Seeds">Seeds</option>
+              <option value="Fertilizer/Pesticide">Fertilizer / Pesticide</option>
+              <option value="Labor">Labor</option>
+              <option value="Machinery/Tractor">Machinery / Tractor</option>
+              <option value="Irrigation">Irrigation</option>
+              <option value="Transport">Transport</option>
+              <option value="CUSTOM">+ Enter Custom Type</option>
+            </select>
+            <input type="text" id="customCategoryInput" placeholder="Enter expense type" class="hidden w-full mt-2 border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+          </div>
+        </div>
+
+        <!-- Amount & Date -->
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Amount (₹)</label>
+            <input type="number" id="amount" min="1" placeholder="0" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none" required>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Date</label>
+            <input type="date" id="expenseDate" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none" required>
+          </div>
+        </div>
+
+        <!-- Notes -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Note / Details (Optional)</label>
+          <input type="text" id="notes" placeholder="e.g., Bought from shop" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+        </div>
+
+        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-lg text-sm shadow-sm transition">
+          + Add Expense
+        </button>
+      </form>
+    </section>
+
+    <!-- Spending Breakdown Summary -->
+    <section class="grid grid-cols-3 gap-3" id="summaryCards">
+      <!-- Dynamic summary totals generate here -->
+    </section>
+
+    <!-- History & Filter Section -->
+    <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+      <div class="flex flex-col space-y-3 mb-4 pb-3 border-b">
+        <div class="flex justify-between items-center">
+          <h2 class="text-base font-bold text-slate-700">Expense History</h2>
+          <span id="grandTotal" class="text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-md">Filtered Total: ₹0</span>
+        </div>
+
+        <!-- Filters -->
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-[10px] uppercase font-bold text-slate-400 mb-1">Filter by Person</label>
+            <select id="filterPerson" onchange="renderList()" class="w-full border border-slate-300 text-xs rounded-lg p-2 focus:outline-none">
+              <option value="ALL">All Persons</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[10px] uppercase font-bold text-slate-400 mb-1">Filter by Crop</label>
+            <select id="filterCrop" onchange="renderList()" class="w-full border border-slate-300 text-xs rounded-lg p-2 focus:outline-none">
+              <option value="ALL">All Crops</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div id="expenseList" class="space-y-3">
+        <!-- Records load dynamically -->
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    let expenses = JSON.parse(localStorage.getItem('crop_expenses_v2')) || [];
+
+    // Set default date
+    document.getElementById('expenseDate').valueAsDate = new Date();
+
+    function toggleCustomInputs() {
+      const spentBySelect = document.getElementById('spentBySelect');
+      const customPersonInput = document.getElementById('customPersonInput');
+      if (spentBySelect.value === 'CUSTOM') {
+        customPersonInput.classList.remove('hidden');
+        customPersonInput.required = true;
+      } else {
+        customPersonInput.classList.add('hidden');
+        customPersonInput.required = false;
+      }
+
+      const categorySelect = document.getElementById('categorySelect');
+      const customCategoryInput = document.getElementById('customCategoryInput');
+      if (categorySelect.value === 'CUSTOM') {
+        customCategoryInput.classList.remove('hidden');
+        customCategoryInput.required = true;
+      } else {
+        customCategoryInput.classList.add('hidden');
+        customCategoryInput.required = false;
+      }
+    }
+
+    // Form submission
+    document.getElementById('expenseForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const spentBySelect = document.getElementById('spentBySelect').value;
+      const finalSpentBy = spentBySelect === 'CUSTOM' 
+        ? document.getElementById('customPersonInput').value.trim() 
+        : spentBySelect;
+
+      const categorySelect = document.getElementById('categorySelect').value;
+      const finalCategory = categorySelect === 'CUSTOM' 
+        ? document.getElementById('customCategoryInput').value.trim() 
+        : categorySelect;
+
+      const record = {
+        id: Date.now(),
+        spentBy: finalSpentBy,
+        cropName: document.getElementById('cropName').value.trim(),
+        category: finalCategory,
+        amount: parseFloat(document.getElementById('amount').value),
+        date: document.getElementById('expenseDate').value,
+        notes: document.getElementById('notes').value.trim()
+      };
+
+      expenses.unshift(record);
+      saveAndRender();
+
+      // Reset Form
+      e.target.reset();
+      document.getElementById('expenseDate').valueAsDate = new Date();
+      toggleCustomInputs();
+    });
+
+    function deleteRecord(id) {
+      if (confirm('Delete this expense entry?')) {
+        expenses = expenses.filter(item => item.id !== id);
+        saveAndRender();
+      }
+    }
+
+    function saveAndRender() {
+      localStorage.setItem('crop_expenses_v2', JSON.stringify(expenses));
+      populateFilterDropdowns();
+      renderSummary();
+      renderList();
+    }
+
+    function populateFilterDropdowns() {
+      const personFilter = document.getElementById('filterPerson');
+      const cropFilter = document.getElementById('filterCrop');
+
+      const currentPersonVal = personFilter.value;
+      const currentCropVal = cropFilter.value;
+
+      // Collect unique values
+      const persons = ['Home', 'Ashok', 'Dhanu', ...new Set(expenses.map(e => e.spentBy))];
+      const uniquePersons = [...new Set(persons)];
+      const uniqueCrops = [...new Set(expenses.map(e => e.cropName))];
+
+      personFilter.innerHTML = '<option value="ALL">All Persons</option>' + 
+        uniquePersons.map(p => `<option value="${p}">${p}</option>`).join('');
+
+      cropFilter.innerHTML = '<option value="ALL">All Crops</option>' + 
+        uniqueCrops.map(c => `<option value="${c}">${c}</option>`).join('');
+
+      personFilter.value = uniquePersons.includes(currentPersonVal) ? currentPersonVal : 'ALL';
+      cropFilter.value = uniqueCrops.includes(currentCropVal) ? currentCropVal : 'ALL';
+    }
+
+    function renderSummary() {
+      const summaryCards = document.getElementById('summaryCards');
+      
+      const personTotals = {};
+      expenses.forEach(e => {
+        personTotals[e.spentBy] = (personTotals[e.spentBy] || 0) + e.amount;
+      });
+
+      // Ensure key persons exist
+      ['Home', 'Ashok', 'Dhanu'].forEach(p => {
+        if (!(p in personTotals)) personTotals[p] = 0;
+      });
+
+      summaryCards.innerHTML = Object.keys(personTotals).map(person => `
+        <div class="bg-white p-3 rounded-xl border border-slate-200 text-center shadow-sm">
+          <p class="text-[10px] uppercase tracking-wider font-bold text-slate-400 truncate">${person}</p>
+          <p class="text-sm sm:text-base font-bold text-emerald-700 mt-0.5">₹${personTotals[person].toLocaleString('en-IN')}</p>
+        </div>
+      `).join('');
+    }
+
+    function renderList() {
+      const container = document.getElementById('expenseList');
+      const personFilter = document.getElementById('filterPerson').value;
+      const cropFilter = document.getElementById('filterCrop').value;
+
+      const filtered = expenses.filter(e => {
+        const matchesPerson = personFilter === 'ALL' || e.spentBy === personFilter;
+        const matchesCrop = cropFilter === 'ALL' || e.cropName.toLowerCase() === cropFilter.toLowerCase();
+        return matchesPerson && matchesCrop;
+      });
+
+      const totalFiltered = filtered.reduce((sum, item) => sum + item.amount, 0);
+      document.getElementById('grandTotal').textContent = `Filtered Total: ₹${totalFiltered.toLocaleString('en-IN')}`;
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<p class="text-center text-slate-400 py-6 text-xs">No records matching selected filters.</p>`;
+        return;
+      }
+
+      container.innerHTML = filtered.map(item => `
+        <div class="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-100">
+          <div class="space-y-0.5">
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-sm text-slate-800">${escapeHtml(item.cropName)}</span>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">${escapeHtml(item.spentBy)}</span>
+            </div>
+            <p class="text-xs text-slate-500">${escapeHtml(item.category)} • ${item.date}</p>
+            ${item.notes ? `<p class="text-xs text-slate-600 italic">Note: ${escapeHtml(item.notes)}</p>` : ''}
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="font-extrabold text-sm text-slate-700">₹${item.amount.toLocaleString('en-IN')}</span>
+            <button onclick="deleteRecord(${item.id})" class="text-slate-400 hover:text-red-500 text-xs font-bold transition">✕</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function exportCSV() {
+      if (expenses.length === 0) return alert('No data to export!');
+      
+      let csv = 'Date,Spent By,Crop Name,Category,Amount,Notes\n';
+      expenses.forEach(e => {
+        csv += `"${e.date}","${e.spentBy}","${e.cropName}","${e.category}",${e.amount},"${e.notes}"\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.setAttribute('href', url);
+      a.setAttribute('download', 'crop_expenses.csv');
+      a.click();
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/[&<>"']/g, m => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      })[m]);
+    }
+
+    // Initial load
+    saveAndRender();
+  </script>
+</body>
+</html>
 
