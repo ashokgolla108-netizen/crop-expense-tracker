@@ -308,8 +308,10 @@
       textMsg += `💰 *Grand Total:* ₹${totalAmount.toLocaleString('en-IN')}\n\n`;
       textMsg += `_(CSV report downloaded to device)_`;
 
-      // 3. Open WhatsApp with pre-filled message
-      const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(textMsg)}`;
+      // 3. Open WhatsApp directly to target number +91 7075226826
+      const phoneNumber = "917075226826";
+      const whatsappUrl = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodeURIComponent(textMsg)}`;
+      
       window.open(whatsappUrl, '_blank');
     }
 
