@@ -50,7 +50,7 @@
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Crop Name</label>
             <select id="cropSelect" onchange="toggleCustomInputs()" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none" required>
-              <!-- Populated with Tomato and Groundnut -->
+              <!-- Populated dynamically with Tomato, Groundnut, Bore, etc. -->
             </select>
             <input type="text" id="customCropInput" placeholder="Enter new crop name" class="hidden w-full mt-2 border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
           </div>
@@ -135,10 +135,54 @@
   </main>
 
   <script>
-    let expenses = JSON.parse(localStorage.getItem('crop_expenses_v2')) || [];
+    // Restored 38 entries from your backup CSV
+    const restoredBackupData = [
+      {"id": 1724402280000, "spentBy": "Home", "cropName": "Bore", "category": "Fertilizer/Pesticide", "amount": 850, "date": "2026-08-21", "notes": "Petrol pump repair"},
+      {"id": 1724402220000, "spentBy": "Home", "cropName": "Tomato", "category": "Fertilizer/Pesticide", "amount": 400, "date": "2026-08-21", "notes": "Bellam"},
+      {"id": 1724402160000, "spentBy": "Home", "cropName": "Groundnut", "category": "Transport", "amount": 90, "date": "2026-08-21", "notes": "28:28"},
+      {"id": 1724402100000, "spentBy": "Home", "cropName": "Groundnut", "category": "Fertilizer/Pesticide", "amount": 1200, "date": "2026-08-21", "notes": "CMS"},
+      {"id": 1724402040000, "spentBy": "Home", "cropName": "Groundnut", "category": "Fertilizer/Pesticide", "amount": 6900, "date": "2026-08-21", "notes": "28:28"},
+      {"id": 1724401980000, "spentBy": "Ashok", "cropName": "Groundnut", "category": "Transport", "amount": 800, "date": "2026-08-21", "notes": "Gypsum/ growth pesticides"},
+      {"id": 1724401920000, "spentBy": "Ashok", "cropName": "Groundnut", "category": "Fertilizer/Pesticide", "amount": 8900, "date": "2026-08-21", "notes": "Gypsum/ growth pesticides"},
+      {"id": 1724401860000, "spentBy": "Home", "cropName": "Tomato", "category": "Fertilizer/Pesticide", "amount": 400, "date": "2026-08-18", "notes": ""},
+      {"id": 1724401800000, "spentBy": "Home", "cropName": "Tomato", "category": "Fertilizer/Pesticide", "amount": 8400, "date": "2026-08-14", "notes": "Balu"},
+      {"id": 1724401740000, "spentBy": "Ashok", "cropName": "Tomato", "category": "Labor", "amount": 2000, "date": "2026-08-14", "notes": "Staking tree"},
+      {"id": 1724401680000, "spentBy": "Home", "cropName": "Groundnut", "category": "Labor", "amount": 1050, "date": "2026-08-12", "notes": "Spraying"},
+      {"id": 1724401620000, "spentBy": "Home", "cropName": "Tomato", "category": "Fertilizer/Pesticide", "amount": 600, "date": "2026-08-11", "notes": ""},
+      {"id": 1724401560000, "spentBy": "Home", "cropName": "Groundnut", "category": "Labor", "amount": 1400, "date": "2026-08-10", "notes": "Weeding"},
+      {"id": 1724401500000, "spentBy": "Home", "cropName": "Tomato", "category": "Fertilizer/Pesticide", "amount": 800, "date": "2026-08-09", "notes": "Pesticides"},
+      {"id": 1724401440000, "spentBy": "Home", "cropName": "Groundnut", "category": "Labor", "amount": 5000, "date": "2026-08-08", "notes": "Weeding"},
+      {"id": 1724401380000, "spentBy": "Home", "cropName": "Groundnut", "category": "Fertilizer/Pesticide", "amount": 4700, "date": "2026-08-08", "notes": ""},
+      {"id": 1724401320000, "spentBy": "Home", "cropName": "Tomato", "category": "Fertilizer/Pesticide", "amount": 1000, "date": "2026-08-08", "notes": "Medicine"},
+      {"id": 1724401260000, "spentBy": "Home", "cropName": "Groundnut", "category": "Machinery/Tractor", "amount": 6000, "date": "2026-08-08", "notes": "Danthulu"},
+      {"id": 1724401200000, "spentBy": "Home", "cropName": "Groundnut", "category": "Machinery/Tractor", "amount": 4000, "date": "2026-08-07", "notes": "Danthulu"},
+      {"id": 1724401140000, "spentBy": "Ashok", "cropName": "Tomato", "category": "Labor", "amount": 2000, "date": "2026-08-06", "notes": "Staking tree"},
+      {"id": 1724401080000, "spentBy": "Home", "cropName": "Tomato", "category": "Fertilizer/Pesticide", "amount": 400, "date": "2026-08-06", "notes": "Bellam"},
+      {"id": 1724401020000, "spentBy": "Home", "cropName": "Tomato", "category": "Fertilizer/Pesticide", "amount": 600, "date": "2026-08-05", "notes": "Medicine"},
+      {"id": 1724400960000, "spentBy": "Home", "cropName": "Tomato", "category": "Fertilizer/Pesticide", "amount": 800, "date": "2026-08-04", "notes": "Medicine"},
+      {"id": 1724400900000, "spentBy": "Home", "cropName": "Tomato", "category": "Fertilizer/Pesticide", "amount": 2500, "date": "2026-08-02", "notes": "Medicine"},
+      {"id": 1724400840000, "spentBy": "Home", "cropName": "Tomato", "category": "Fertilizer/Pesticide", "amount": 600, "date": "2026-08-01", "notes": "Bellam"},
+      {"id": 1724400780000, "spentBy": "Home", "cropName": "Tomato", "category": "Fertilizer/Pesticide", "amount": 1000, "date": "2026-07-31", "notes": "Medicine"},
+      {"id": 1724400720000, "spentBy": "Home", "cropName": "Tomato", "category": "Seeds", "amount": 7500, "date": "2026-07-30", "notes": "Tomato plants"},
+      {"id": 1724400660000, "spentBy": "Home", "cropName": "Groundnut", "category": "Fertilizer/Pesticide", "amount": 4400, "date": "2026-07-28", "notes": "Kallala mandhu"},
+      {"id": 1724400600000, "spentBy": "Home", "cropName": "Groundnut", "category": "Paisalu", "amount": 3000, "date": "2026-07-27", "notes": ""},
+      {"id": 1724400540000, "spentBy": "Home", "cropName": "Bore", "category": "Machinery/Tractor", "amount": 2600, "date": "2026-07-23", "notes": ""},
+      {"id": 1724400480000, "spentBy": "Ashok", "cropName": "Bore", "category": "Motor/pump", "amount": 1000, "date": "2026-07-22", "notes": ""},
+      {"id": 1724400420000, "spentBy": "Home", "cropName": "Groundnut", "category": "Fertilizer/Pesticide", "amount": 2400, "date": "2026-07-22", "notes": ""},
+      {"id": 1724400360000, "spentBy": "Home", "cropName": "Groundnut", "category": "Fertilizer/Pesticide", "amount": 4050, "date": "2026-07-22", "notes": ""},
+      {"id": 1724400300000, "spentBy": "Home", "cropName": "Groundnut", "category": "Seeds", "amount": 41400, "date": "2026-07-22", "notes": ""},
+      {"id": 1724400240000, "spentBy": "Ashok", "cropName": "Bore", "category": "Motor/pump", "amount": 20000, "date": "2026-07-21", "notes": ""},
+      {"id": 1724400180000, "spentBy": "Home", "cropName": "Bore", "category": "Motor/pump", "amount": 150000, "date": "2026-07-20", "notes": ""},
+      {"id": 1724400120000, "spentBy": "Ashok", "cropName": "Bore", "category": "Drilling", "amount": 17000, "date": "2026-07-21", "notes": ""},
+      {"id": 1724400060000, "spentBy": "Home", "cropName": "Bore", "category": "Drilling", "amount": 50000, "date": "2026-07-19", "notes": ""}
+    ];
 
-    // Default crops: Tomato and Groundnut
-    const defaultCrops = ['Tomato', 'Groundnut'];
+    // Load from localStorage or initialize with restored backup data
+    let stored = localStorage.getItem('crop_expenses_v2');
+    let expenses = (stored && JSON.parse(stored).length > 0) ? JSON.parse(stored) : restoredBackupData;
+
+    // Default crop choices
+    const defaultCrops = ['Tomato', 'Groundnut', 'Bore'];
 
     // Color palettes for summary cards
     const colorSchemes = [
@@ -149,11 +193,9 @@
       { bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-800', label: 'text-purple-600' }
     ];
 
-    // Set default date
     document.getElementById('expenseDate').valueAsDate = new Date();
 
     function toggleCustomInputs() {
-      // Custom Person Input
       const spentBySelect = document.getElementById('spentBySelect');
       const customPersonInput = document.getElementById('customPersonInput');
       if (spentBySelect.value === 'CUSTOM') {
@@ -164,7 +206,6 @@
         customPersonInput.required = false;
       }
 
-      // Custom Crop Input
       const cropSelect = document.getElementById('cropSelect');
       const customCropInput = document.getElementById('customCropInput');
       if (cropSelect.value === 'CUSTOM') {
@@ -175,7 +216,6 @@
         customCropInput.required = false;
       }
 
-      // Custom Expense Category Input
       const categorySelect = document.getElementById('categorySelect');
       const customCategoryInput = document.getElementById('customCategoryInput');
       if (categorySelect.value === 'CUSTOM') {
@@ -187,7 +227,6 @@
       }
     }
 
-    // Populate Crop Form Selection Dropdown
     function populateFormCropDropdown() {
       const cropSelect = document.getElementById('cropSelect');
       const currentSelected = cropSelect.value;
@@ -203,7 +242,6 @@
       }
     }
 
-    // Form submission
     document.getElementById('expenseForm').addEventListener('submit', (e) => {
       e.preventDefault();
 
@@ -235,7 +273,6 @@
       expenses.unshift(record);
       saveAndRender();
 
-      // Reset Form
       e.target.reset();
       document.getElementById('expenseDate').valueAsDate = new Date();
       toggleCustomInputs();
@@ -257,7 +294,6 @@
       renderList();
     }
 
-    // Populate Person Filter Dropdown
     function populatePersonDropdown() {
       const personFilter = document.getElementById('filterPerson');
       const currentPersonVal = personFilter.value;
@@ -272,7 +308,6 @@
       personFilter.value = uniquePersons.includes(currentPersonVal) ? currentPersonVal : 'ALL';
     }
 
-    // Populate Crop Dropdown based on Selected Person
     function populateCropDropdown() {
       const personFilter = document.getElementById('filterPerson').value;
       const cropFilter = document.getElementById('filterCrop');
@@ -300,7 +335,6 @@
       renderList();
     }
 
-    // Color-coded summary calculation
     function renderSummary() {
       const summaryCards = document.getElementById('summaryCards');
       
@@ -318,114 +352,3 @@
       summaryCards.innerHTML = keys.map((person, index) => {
         const theme = colorSchemes[index % colorSchemes.length];
         return `
-          <div class="${theme.bg} ${theme.border} p-3 rounded-xl border text-center shadow-sm">
-            <p class="text-[10px] uppercase tracking-wider font-extrabold ${theme.label} truncate">${person}</p>
-            <p class="text-sm sm:text-base font-extrabold ${theme.text} mt-0.5">₹${personTotals[person].toLocaleString('en-IN')}</p>
-          </div>
-        `;
-      }).join('');
-    }
-
-    function renderList() {
-      const container = document.getElementById('expenseList');
-      const personFilter = document.getElementById('filterPerson').value;
-      const cropFilter = document.getElementById('filterCrop').value;
-
-      const filtered = expenses.filter(e => {
-        const matchesPerson = personFilter === 'ALL' || e.spentBy.toLowerCase() === personFilter.toLowerCase();
-        const matchesCrop = cropFilter === 'ALL' || e.cropName.toLowerCase() === cropFilter.toLowerCase();
-        return matchesPerson && matchesCrop;
-      });
-
-      const totalFiltered = filtered.reduce((sum, item) => sum + item.amount, 0);
-      document.getElementById('grandTotal').textContent = `Filtered Total: ₹${totalFiltered.toLocaleString('en-IN')}`;
-
-      if (filtered.length === 0) {
-        container.innerHTML = `<p class="text-center text-slate-400 py-6 text-xs">No records matching selected filters.</p>`;
-        return;
-      }
-
-      container.innerHTML = filtered.map(item => `
-        <div class="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-100">
-          <div class="space-y-0.5">
-            <div class="flex items-center gap-2">
-              <span class="font-bold text-sm text-slate-800">${escapeHtml(item.cropName)}</span>
-              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">${escapeHtml(item.spentBy)}</span>
-            </div>
-            <p class="text-xs text-slate-500">${escapeHtml(item.category)} • ${item.date}</p>
-            ${item.notes ? `<p class="text-xs text-slate-600 italic">Note: ${escapeHtml(item.notes)}</p>` : ''}
-          </div>
-          <div class="flex items-center gap-3">
-            <span class="font-extrabold text-sm text-slate-700">₹${item.amount.toLocaleString('en-IN')}</span>
-            <button onclick="deleteRecord(${item.id})" class="text-slate-400 hover:text-red-500 text-xs font-bold transition">✕</button>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    // Export Excel-Compatible CSV (With BOM header for auto column split)
-    function exportCSV() {
-      if (expenses.length === 0) return alert('No expenses to export!');
-      
-      // UTF-8 BOM prefix forces MS Excel to open standard columns automatically
-      let csv = '\uFEFF';
-      csv += 'Date,Spent By,Crop Name,Expense Type,Amount (INR),Notes\n';
-
-      expenses.forEach(e => {
-        const cleanNotes = e.notes ? e.notes.replace(/"/g, '""') : '';
-        csv += `"${e.date}","${e.spentBy}","${e.cropName}","${e.category}",${e.amount},"${cleanNotes}"\n`;
-      });
-
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.setAttribute('href', url);
-      a.setAttribute('download', `crop_expenses_${new Date().toISOString().slice(0,10)}.csv`);
-      a.click();
-    }
-
-    // WhatsApp Share Feature
-    function shareToWhatsApp() {
-      if (expenses.length === 0) {
-        return alert('No expenses to share!');
-      }
-
-      exportCSV();
-
-      const personTotals = {};
-      let totalAmount = 0;
-
-      expenses.forEach(e => {
-        personTotals[e.spentBy] = (personTotals[e.spentBy] || 0) + e.amount;
-        totalAmount += e.amount;
-      });
-
-      let textMsg = `🌾 *Crop Expense Summary*\n`;
-      textMsg += `📅 *Date:* ${new Date().toLocaleDateString('en-IN')}\n\n`;
-      textMsg += `*Breakdown by Person:*\n`;
-
-      Object.keys(personTotals).forEach(p => {
-        textMsg += `• ${p}: ₹${personTotals[p].toLocaleString('en-IN')}\n`;
-      });
-
-      textMsg += `----------------------------\n`;
-      textMsg += `💰 *Grand Total:* ₹${totalAmount.toLocaleString('en-IN')}\n\n`;
-      textMsg += `_(CSV report downloaded to device)_`;
-
-      const phoneNumber = "917075226826";
-      const whatsappUrl = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodeURIComponent(textMsg)}`;
-      
-      window.open(whatsappUrl, '_blank');
-    }
-
-    function escapeHtml(str) {
-      return str.replace(/[&<>"']/g, m => ({
-        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-      })[m]);
-    }
-
-    // Initial load
-    saveAndRender();
-  </script>
-</body>
-</html>
